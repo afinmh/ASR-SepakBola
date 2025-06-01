@@ -9,7 +9,7 @@ DATA_PATH = "data"
 def load_dataset(base_dir):
     features, labels = [], []
     for fname in os.listdir(base_dir):
-        if fname.endswith('.mp3'):
+        if fname.endswith('.wav'):
             label = fname.split('_')[0]
             mfcc = extract_mfcc(os.path.join(base_dir, fname))
             features.append(mfcc)
