@@ -5,6 +5,7 @@ from hmmlearn import hmm
 from sklearn.metrics import classification_report
 
 DATA_PATH = "data"
+OUTPUT_PATH = "output/audio_converted.wav"
 
 def load_dataset(base_dir):
     features, labels = [], []
@@ -41,10 +42,30 @@ def predict_hmm(models, X_test):
     return predictions
 
 # --- Main ---
-X_train, y_train = load_dataset(os.path.join(DATA_PATH, "train"))
-X_test, y_test = load_dataset(os.path.join(DATA_PATH, "test"))
+if __name__ == "__main__":
+    print("Pilih mode:")
+    print("1. Uji semua data di folder test/")
+    print("2. Uji satu file dari rekaman (output/audio_converted.wav)")
+    choice = input("Masukkan pilihan (1/2): ")
 
-models = train_hmm_models(X_train, y_train)
-preds = predict_hmm(models, X_test)
+    # Load data latih
+    X_train, y_train = load_dataset(os.path.join(DATA_PATH, "train"))
+    models = train_hmm_models(X_train, y_train)
 
-print(classification_report(y_test, preds, zero_division=0))
+    if choice == "1":
+        # Evaluasi semua data test
+        X_test, y_test = load_dataset(os.path.join(DATA_PATH, "test"))
+        preds = predict_hmm(models, X_test)
+        print(classification_report(y_test, preds, zero_division=0))
+
+    elif choice == "2":
+        # Prediksi satu file hasil rekaman
+        if not os.path.exists(OUTPUT_PATH):
+            print(f"[ERROR] File tidak ditemukan: {OUTPUT_PATH}")
+        else:
+            mfcc = extract_mfcc(OUTPUT_PATH)
+            scores = {label: model.score(mfcc) for label, model in models.items()}
+            pred = max(scores, key=scores.get)
+            print(f"[HASIL] Prediksi untuk rekaman: {pred}")
+    else:
+        print("[ERROR] Pilihan tidak valid.")

@@ -5,6 +5,7 @@ from scipy.spatial.distance import cdist
 from collections import Counter
 
 DATA_PATH = "data"
+OUTPUT_PATH = "output/audio_converted.wav"
 
 def extract_mfcc(file_path):
     y, sr = librosa.load(file_path, sr=16000)
@@ -52,11 +53,27 @@ def evaluate(preds, trues):
     return report
 
 # --- Main ---
-train_feat, train_label = load_dataset(os.path.join(DATA_PATH, "train"))
-test_feat, test_label = load_dataset(os.path.join(DATA_PATH, "test"))
+if __name__ == "__main__":
+    print("Pilih mode:")
+    print("1. Uji semua data di folder test/")
+    print("2. Uji satu file dari rekaman (output/audio_converted.wav)")
+    choice = input("Masukkan pilihan (1/2): ")
 
-preds = [predict_dtw(train_feat, train_label, test) for test in test_feat]
+    train_feat, train_label = load_dataset(os.path.join(DATA_PATH, "train"))
 
-report = evaluate(preds, test_label)
-for cls, metrics in report.items():
-    print(f"{cls}: Precision={metrics[0]:.2f}, Recall={metrics[1]:.2f}, F1={metrics[2]:.2f}")
+    if choice == "1":
+        test_feat, test_label = load_dataset(os.path.join(DATA_PATH, "test"))
+        preds = [predict_dtw(train_feat, train_label, test) for test in test_feat]
+        report = evaluate(preds, test_label)
+        for cls, metrics in report.items():
+            print(f"{cls}: Precision={metrics[0]:.2f}, Recall={metrics[1]:.2f}, F1={metrics[2]:.2f}")
+
+    elif choice == "2":
+        if not os.path.exists(OUTPUT_PATH):
+            print(f"[ERROR] File rekaman tidak ditemukan: {OUTPUT_PATH}")
+        else:
+            test_feat = extract_mfcc(OUTPUT_PATH)
+            prediction = predict_dtw(train_feat, train_label, test_feat)
+            print(f"[HASIL] Prediksi untuk rekaman: {prediction}")
+    else:
+        print("[ERROR] Pilihan tidak valid.")
